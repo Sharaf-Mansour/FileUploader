@@ -1,0 +1,33 @@
+﻿@page "/"
+@using System.IO
+@using Microsoft.AspNetCore.Components.Forms
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
+<h3>&nbsp; &nbsp;Upload files</h3>
+<p> &nbsp;&nbsp;  <InputFile OnChange="@(e=>OnInputFileChange(e))" multiple /></p>
+&nbsp;&nbsp; <button @onclick="FileUpload">Upload All</button>
+<h2>&nbsp; &nbsp;@status</h2>
+
+
+@code{
+    public string status { get; set; } = "Please Select Files to Upload!";
+    IReadOnlyList<IBrowserFile> SelectedImage = Array.Empty<IBrowserFile>();
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        SelectedImage = e.GetMultipleFiles(Int32.MaxValue); 
+        status = "Ready!";
+        StateHasChanged();
+    }
+    public async void FileUpload()
+    {
+        foreach(var file in SelectedImage)
+        {
+           using var stream = file.OpenReadStream(Int64.MaxValue);
+           using  var fs = File.Create($"{env.WebRootPath}\\Images\\{file.Name}");
+            await stream.CopyToAsync(fs);
+            fs.Close();
+        }
+        status = "Done!";
+        StateHasChanged();
+
+    }
+}
